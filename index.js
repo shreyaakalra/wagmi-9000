@@ -19,10 +19,14 @@ if (cluster.isMaster) {
   const app = express();
   app.use(express.json());
 
-  // ✅ Add this /ping GET route
   app.get("/ping", (req, res) => {
-    res.send("pong");
+  res.json({
+    message: "pong",
+    timestamp: new Date().toISOString(),
+    lang: "Node.js"
   });
+});
+
 
   app.post("/wagmi", (req, res) => {
     const { a, b } = req.body || {};
