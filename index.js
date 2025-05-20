@@ -5,6 +5,14 @@ const app = express();
 
 app.use(express.json());
 
+app.get('/', (req, res) => {
+  res.json({
+    message: "Welcome to wagmi-9000 API",
+    timestamp: new Date().toISOString(),
+    lang: "Node.js"
+  });
+});
+
 
 app.get("/", (req, res) => {
   res.send("Server is running");
