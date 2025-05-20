@@ -1,25 +1,17 @@
-const cluster = require("cluster");
-const os = require("os");
 const express = require("express");
 
 const PORT = process.env.PORT || 3000;
-const numCPUs = os.cpus().length;
+const app = express();
 
-if (cluster.isMaster) {
-  console.log(`Master ${process.pid} is running`);
-  for (let i = 0; i < numCPUs; i++) {
-    cluster.fork(); // Fork workers
-  }
+app.use(express.json());
 
-  cluster.on("exit", (worker, code, signal) => {
-    console.log(`Worker ${worker.process.pid} died, restarting...`);
-    cluster.fork();
-  });
-} else {
-  const app = express();
-  app.use(express.json());
 
-  app.get("/ping", (req, res) => {
+app.get("/", (req, res) => {
+  res.send("Server is running");
+});
+
+
+app.get("/ping", (req, res) => {
   res.json({
     message: "pong",
     timestamp: new Date().toISOString(),
@@ -28,36 +20,41 @@ if (cluster.isMaster) {
 });
 
 
-  app.post("/wagmi", (req, res) => {
-    const { a, b } = req.body || {};
+app.post("/wagmi", (req, res) => {
+  const { a, b } = req.body || {};
 
-    if (a === undefined && b === undefined) {
-      return res.json({
-        message: "wagmi",
-        timestamp: new Date().toISOString(),
-        lang: "Node.js"
-      });
-    }
-
-    if (
-      typeof a !== "number" ||
-      typeof b !== "number" ||
-      a < 0 ||
-      b < 0 ||
-      a + b > 100
-    ) {
-      return res.status(400).json({ error: "Invalid input" });
-    }
-
+  if (a === undefined && b === undefined) {
     return res.json({
-      result: a + b,
-      a,
-      b,
-      status: "success"
+      message: "wagmi",
+      timestamp: new Date().toISOString(),
+      lang: "Node.js"
     });
-  });
+  }
 
-  app.listen(PORT, () => {
-    console.log(`Worker ${process.pid} started on port ${PORT}`);
+  if (
+    typeof a !== "number" ||
+    typeof b !== "number" ||
+    a < 0 ||
+    b < 0 ||
+    a + b > 100
+  ) {
+    return res.status(400).json({ error: "Invalid input" });
+  }
+
+  return res.json({
+    result: a + b,
+    a,
+    b,
+    status: "success"
   });
-}
+});
+
+
+app.use((err, req, res, next) => {
+  console.error(err.stack);
+  res.status(500).json({ error: "Something broke!" });
+});
+
+app.listen(PORT, () => {
+  console.log(`Server started on port ${PORT}`);
+});
